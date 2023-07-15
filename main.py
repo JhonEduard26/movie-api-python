@@ -1,46 +1,13 @@
-from fastapi import FastAPI
+import this
+
+from fastapi import FastAPI, HTTPException
 from uuid import uuid4
-from pydantic import BaseModel
-
-
-class Movie(BaseModel):
-    title: str
-    overview: str
-    year: int
-    rating: float
-    category: str
+from data.movies import movies
+from models.movie import MovieCreate, MovieUpdate
 
 
 app = FastAPI()
 app.title = 'FastAPI movie API'
-
-
-movies = [
-    {
-        'id': uuid4(),
-        'title': 'Avatar',
-        'overview': 'lorem lorem lorem',
-        'year': '2009',
-        'rating': 7.8,
-        'category': 'Action'
-    },
-    {
-        'id': uuid4(),
-        'title': 'Scream',
-        'overview': 'lorem lorem lorem',
-        'year': '2004',
-        'rating': 8,
-        'category': 'Thriller'
-    },
-    {
-        'id': uuid4(),
-        'title': 'Scream 2',
-        'overview': 'lorem lorem lorem',
-        'year': '2007',
-        'rating': 7,
-        'category': 'Thriller'
-    }
-]
 
 
 @app.get('/', tags=['home'])
@@ -72,10 +39,31 @@ async def get_movies_by_category(category: str):
 
 
 @app.post('/movies', tags=['movies'])
-async def create_movie(movie: Movie):
+async def create_movie(movie: MovieCreate):
     new_movie = {
         'id': uuid4(),
         **movie.model_dump()
     }
     movies.append(new_movie)
     return new_movie
+
+
+@app.put('/movies/{id_movie}', tags=['movies'])
+async def update_movie(id_movie: str, movie: MovieUpdate):
+    for index, item in enumerate(movies):
+        if str(item['id']) == id_movie:
+            movies[index].update(movie)
+            return movies[index]
+
+    raise HTTPException(404, 'Movie not found')
+
+
+@app.delete('/movies/{id_movie}', tags=['movies'])
+async def delete_movie(id_movie: str):
+    movie_find = list(filter(lambda item: str(item['id']) == id_movie, movies))
+
+    if len(movie_find) == 0:
+        raise HTTPException(404, 'Movie not found')
+
+    movies.remove(movie_find[0])
+    return movie_find

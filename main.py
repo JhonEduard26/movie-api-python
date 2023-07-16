@@ -34,32 +34,30 @@ async def login(user: User):
 
 @app.get('/movies', tags=['movies'], response_model=List[Movie])
 async def get_movies():
-    movies = []
     with Session(engine) as session:
         statement = select(Movie)
         results = session.exec(statement)
-        for movie in results:
-            movies.append(movie)
+        movies = [movie for movie in results]
 
     return movies
 
 
 @app.get('/movies/{id_movie}', tags=['movies'], response_model=Movie)
 async def get_movie_by_id(id_movie: UUID):
-    movie = list(filter(lambda item: item['id'] == id_movie, []))
-    return {
-        'ok': True,
-        'movie': movie
-    }
+    with Session(engine) as session:
+        movie = session.get(Movie, id_movie)
+        if not movie:
+            raise HTTPException(404, 'Movie not found')
+    return movie
 
 
 @app.get('/movies/', tags=['movies'], response_model=List[Movie])
 async def get_movies_by_category(category: str):
-    movies_filtered = list(filter(lambda item: item['category'] == category, []))
-    return {
-        'ok': True,
-        'movies': movies_filtered,
-    }
+    with Session(engine) as session:
+        statement = select(Movie).where(Movie.category == category)
+        movies = session.exec(statement).all()
+
+    return movies
 
 
 @app.post('/movies', tags=['movies'])

@@ -1,18 +1,9 @@
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, Field
 
 
-class MovieCreate(BaseModel):
-    title: str
-    overview: str
-    year: int
-    rating: float
-    category: str
-
-
-class MovieUpdate(BaseModel):
-    title: Optional[str] = None
-    overview: Optional[str] = None
-    year: Optional[int] = None
-    rating: Optional[float] = None
-    category: Optional[str] = None
+class Movie(BaseModel):
+    title: str = Field(min_length=1, max_length=40)
+    overview: str = Field(min_length=1, max_length=120)
+    year: int = Field(gt=1900)
+    rating: float = Field(gt=0.0, le=10.0)
+    category: str = Field(min_length=1, max_length=40)

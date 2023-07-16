@@ -1,9 +1,7 @@
-import this
-
 from fastapi import FastAPI, HTTPException
-from uuid import uuid4
+from uuid import uuid4, UUID
 from data.movies import movies
-from models.movie import MovieCreate, MovieUpdate
+from models.movie import Movie
 
 
 app = FastAPI()
@@ -21,8 +19,8 @@ async def get_movies():
 
 
 @app.get('/movies/{id_movie}', tags=['movies'])
-async def get_movie_by_id(id_movie: str):
-    movie = list(filter(lambda item: str(item['id']) == id_movie, movies))
+async def get_movie_by_id(id_movie: UUID):
+    movie = list(filter(lambda item: item['id'] == id_movie, movies))
     return {
         'ok': True,
         'movie': movie
@@ -39,7 +37,7 @@ async def get_movies_by_category(category: str):
 
 
 @app.post('/movies', tags=['movies'])
-async def create_movie(movie: MovieCreate):
+async def create_movie(movie: Movie):
     new_movie = {
         'id': uuid4(),
         **movie.model_dump()
@@ -49,9 +47,9 @@ async def create_movie(movie: MovieCreate):
 
 
 @app.put('/movies/{id_movie}', tags=['movies'])
-async def update_movie(id_movie: str, movie: MovieUpdate):
+async def update_movie(id_movie: UUID, movie: Movie):
     for index, item in enumerate(movies):
-        if str(item['id']) == id_movie:
+        if item['id'] == id_movie:
             movies[index].update(movie)
             return movies[index]
 
@@ -59,8 +57,8 @@ async def update_movie(id_movie: str, movie: MovieUpdate):
 
 
 @app.delete('/movies/{id_movie}', tags=['movies'])
-async def delete_movie(id_movie: str):
-    movie_find = list(filter(lambda item: str(item['id']) == id_movie, movies))
+async def delete_movie(id_movie: UUID):
+    movie_find = list(filter(lambda item: item['id'] == id_movie, movies))
 
     if len(movie_find) == 0:
         raise HTTPException(404, 'Movie not found')

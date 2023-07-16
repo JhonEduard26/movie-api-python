@@ -1,11 +1,18 @@
+from os import getenv
 from fastapi import FastAPI, HTTPException
 from uuid import uuid4, UUID
+from dotenv import load_dotenv
+from typing import List
+
 from data.movies import movies
 from models.movie import Movie
+from models.user import User
+from jwt_utils.jwt_manager import generate_token
 
 
 app = FastAPI()
 app.title = 'FastAPI movie API'
+load_dotenv()
 
 
 @app.get('/', tags=['home'])
@@ -13,12 +20,23 @@ async def root():
     return {'message': 'Hello World'}
 
 
-@app.get('/movies', tags=['movies'])
+@app.post('/auth/login', tags=['auth'])
+async def login(user: User):
+    if user.email == getenv('EMAIL') and user.password == getenv('PASS'):
+        token = generate_token(user.model_dump())
+        return {
+            'token': token
+        }
+    else:
+        raise HTTPException(401, 'Unauthorized')
+
+
+@app.get('/movies', tags=['movies'], response_model=List[Movie])
 async def get_movies():
     return movies
 
 
-@app.get('/movies/{id_movie}', tags=['movies'])
+@app.get('/movies/{id_movie}', tags=['movies'], response_model=Movie)
 async def get_movie_by_id(id_movie: UUID):
     movie = list(filter(lambda item: item['id'] == id_movie, movies))
     return {
@@ -27,7 +45,7 @@ async def get_movie_by_id(id_movie: UUID):
     }
 
 
-@app.get('/movies/', tags=['movies'])
+@app.get('/movies/', tags=['movies'], response_model=List[Movie])
 async def get_movies_by_category(category: str):
     movies_filtered = list(filter(lambda item: item['category'] == category, movies))
     return {

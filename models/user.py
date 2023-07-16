@@ -1,6 +1,9 @@
-from pydantic import BaseModel, Field
+from typing import Optional
+from sqlmodel import Field, SQLModel
+from uuid import UUID
 
 
-class User(BaseModel):
-    email: str = Field(min_length=4, max_length=32)
-    password: str = Field(min_length=6, max_length=32)
+class User(SQLModel, table=True):
+    id: Optional[UUID] = Field(default=None, primary_key=True)
+    email: str
+    password: str

@@ -5,5 +5,5 @@ from uuid import UUID
 
 class User(SQLModel, table=True):
     id: Optional[UUID] = Field(default=None, primary_key=True)
-    email: str
-    password: str
+    email: str = Field(unique=True)
+    password: str = Field(min_length=6, max_length=32)

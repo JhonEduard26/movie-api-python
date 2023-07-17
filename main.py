@@ -72,20 +72,35 @@ async def create_movie(movie: Movie):
 
 @app.put('/movies/{id_movie}', tags=['movies'])
 async def update_movie(id_movie: UUID, movie: Movie):
-    for index, item in enumerate([]):
-        if item['id'] == id_movie:
-            [][index].update(movie)
-            return [][index]
+    with Session(engine) as session:
+        statement = select(Movie).where(Movie.id == id_movie)
+        results = session.exec(statement)
+        movie_found = results.one()
 
-    raise HTTPException(404, 'Movie not found')
+        movie_found.category = movie.category
+        movie_found.title = movie.title
+        movie_found.title = movie.title
+        movie_found.year = movie.year
+        movie_found.overview = movie.overview
+        movie_found.rating = movie.rating
+
+        session.add(movie_found)
+        session.commit()
+        session.refresh(movie_found)
+
+    return movie_found
 
 
 @app.delete('/movies/{id_movie}', tags=['movies'])
 async def delete_movie(id_movie: UUID):
-    movie_find = list(filter(lambda item: item['id'] == id_movie, []))
+    with Session(engine) as session:
+        movie = session.get(Movie, id_movie)
+        if not movie:
+            raise HTTPException(404, 'Movie not found')
 
-    if len(movie_find) == 0:
-        raise HTTPException(404, 'Movie not found')
+        session.delete(movie)
+        session.commit()
 
-    [].remove(movie_find[0])
-    return movie_find
+    return {
+        'message': 'Movie deleted'
+    }
